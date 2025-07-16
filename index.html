@@ -1,18 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Digit Guess Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clickle</title>
   <style>
     body {
       font-family: sans-serif;
-      background: #f4f4f4;
+      background: #115740;
+      color: #ddd;
       text-align: center;
       padding: 2rem;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
     h1 {
       margin-bottom: 1rem;
+      color: black;
     }
     .guess-row {
       display: flex;
@@ -26,18 +35,20 @@
       margin: 0 5px;
       font-size: 24px;
       border-radius: 5px;
-      background: #ddd;
+      background: #2f6f54;
+      color: #ddd;
+      user-select: none;
     }
     .correct {
-      background-color: #6aaa64; /* green */
+      background-color: #6aaa64;
       color: white;
     }
     .close {
-      background-color: #c9b458; /* yellow */
+      background-color: #c9b458;
       color: white;
     }
     .wrong {
-      background-color: #787c7e; /* gray */
+      background-color: #787c7e;
       color: white;
     }
     .input-row {
@@ -48,53 +59,148 @@
       height: 50px;
       font-size: 18px;
       margin: 5px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      background: #2f6f54;
+      color: #ddd;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .keypad button.wrong {
+      background-color: #787c7e !important;
+      color: white !important;
+      cursor: default;
+    }
+    .keypad button.correct {
+      background-color: #6aaa64 !important;
+      color: white !important;
+      cursor: default;
+    }
+    .keypad button.close {
+      background-color: #c9b458 !important;
+      color: white !important;
+      cursor: default;
+    }
+    .keypad button:disabled {
+      cursor: default;
+      opacity: 0.7;
+    }
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .action-buttons button {
+      width: 120px;
+      height: 40px;
+      font-size: 16px;
+      margin: 0 10px;
+      border-radius: 5px;
+      border: none;
+      background-color: #357edd;
+      color: white;
+      cursor: pointer;
     }
     .message {
       margin-top: 1rem;
       font-weight: bold;
       font-size: 1.2rem;
     }
+    #share-btn {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      background-color: #357edd;
+      color: white;
+      cursor: pointer;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Digit Guess Game</h1>
+  <h1>Clickle</h1>
   <div id="guesses"></div>
 
   <div class="input-row">
     <div id="current-guess" class="guess-row"></div>
-    <div class="keypad">
+    <div class="keypad" aria-label="Digit keypad" role="group">
       <div>
-        <button onclick="addDigit(0)">0</button>
-        <button onclick="addDigit(1)">1</button>
-        <button onclick="addDigit(2)">2</button>
-        <button onclick="addDigit(3)">3</button>
-        <button onclick="addDigit(4)">4</button>
+        <button data-digit="0" onclick="addDigit(0)">0</button>
+        <button data-digit="1" onclick="addDigit(1)">1</button>
+        <button data-digit="2" onclick="addDigit(2)">2</button>
+        <button data-digit="3" onclick="addDigit(3)">3</button>
+        <button data-digit="4" onclick="addDigit(4)">4</button>
       </div>
       <div>
-        <button onclick="addDigit(5)">5</button>
-        <button onclick="addDigit(6)">6</button>
-        <button onclick="addDigit(7)">7</button>
-        <button onclick="addDigit(8)">8</button>
-        <button onclick="addDigit(9)">9</button>
+        <button data-digit="5" onclick="addDigit(5)">5</button>
+        <button data-digit="6" onclick="addDigit(6)">6</button>
+        <button data-digit="7" onclick="addDigit(7)">7</button>
+        <button data-digit="8" onclick="addDigit(8)">8</button>
+        <button data-digit="9" onclick="addDigit(9)">9</button>
       </div>
+    </div>
+    <div class="action-buttons">
       <button onclick="submitGuess()">Enter</button>
-      <button onclick="clearGuess()">Clear</button>
+      <button onclick="clearGuess()">Clear All</button>
     </div>
   </div>
 
   <div class="message" id="message"></div>
+  <button id="share-btn" onclick="shareResults()">Share Results 📤</button>
+
+  <audio id="win-sound" src="https://cdn.pixabay.com/download/audio/2022/03/02/audio_446900b4ed.mp3?filename=short-jingle-5990.mp3" preload="auto"></audio>
 
   <script>
-    const secret = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10));
+    function getCurrentDateEST() {
+      const now = new Date();
+      const estOffset = 5 * 60 * 60 * 1000;
+      const estTime = new Date(now.getTime() - estOffset);
+      const year = estTime.getUTCFullYear();
+      const month = String(estTime.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(estTime.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function seededRandom(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function generateDailyCode() {
+      const dateStr = getCurrentDateEST();
+      const seed = seededRandom(dateStr);
+      const code = [];
+      let num = seed;
+      for (let i = 0; i < 4; i++) {
+        code.push(num % 10);
+        num = Math.floor(num / 10);
+      }
+      return code.reverse();
+    }
+
+    const secret = generateDailyCode();
     const guessesContainer = document.getElementById('guesses');
     const currentGuessContainer = document.getElementById('current-guess');
     const messageBox = document.getElementById('message');
+    const shareBtn = document.getElementById('share-btn');
+    const winSound = document.getElementById('win-sound');
 
     let currentGuess = [];
     let attempts = 0;
     const maxAttempts = 6;
+    let gameOver = false;
+
+    const digitStatus = {};
 
     function addDigit(num) {
+      if (gameOver) return;
       if (currentGuess.length < 4) {
         currentGuess.push(num);
         renderCurrentGuess();
@@ -102,8 +208,17 @@
     }
 
     function clearGuess() {
+      if (gameOver) return;
       currentGuess = [];
       renderCurrentGuess();
+    }
+
+    function clearLastDigit() {
+      if (gameOver) return;
+      if (currentGuess.length > 0) {
+        currentGuess.pop();
+        renderCurrentGuess();
+      }
     }
 
     function renderCurrentGuess() {
@@ -117,7 +232,11 @@
     }
 
     function submitGuess() {
-      if (currentGuess.length !== 4) return alert('Enter 4 digits');
+      if (gameOver) return;
+      if (currentGuess.length !== 4) {
+        alert('Enter 4 digits');
+        return;
+      }
 
       const row = document.createElement('div');
       row.className = 'guess-row';
@@ -126,7 +245,6 @@
       const tempSecret = [...secret];
       const result = Array(4).fill('wrong');
 
-      // First pass: correct position
       for (let i = 0; i < 4; i++) {
         if (guess[i] === tempSecret[i]) {
           result[i] = 'correct';
@@ -135,7 +253,6 @@
         }
       }
 
-      // Second pass: wrong position
       for (let i = 0; i < 4; i++) {
         if (guess[i] !== null) {
           const index = tempSecret.indexOf(guess[i]);
@@ -145,6 +262,16 @@
           }
         }
       }
+
+      for (let i = 0; i < 4; i++) {
+        const d = currentGuess[i];
+        if (!digitStatus[d] || digitStatus[d] === 'wrong') {
+          digitStatus[d] = result[i];
+        } else if (digitStatus[d] === 'close' && result[i] === 'correct') {
+          digitStatus[d] = 'correct';
+        }
+      }
+      updateKeypadColors();
 
       currentGuess.forEach((digit, i) => {
         const div = document.createElement('div');
@@ -158,19 +285,77 @@
 
       if (result.every(r => r === 'correct')) {
         messageBox.textContent = '🎉 You guessed it!';
+        gameOver = true;
         disableInput();
+        winSound.play();
+        shareBtn.style.display = 'inline-block';
       } else if (attempts >= maxAttempts) {
         messageBox.textContent = `💥 Out of tries! Answer was ${secret.join('')}`;
+        gameOver = true;
         disableInput();
+        shareBtn.style.display = 'inline-block';
       }
 
       clearGuess();
     }
 
-    function disableInput() {
-      document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    function updateKeypadColors() {
+      document.querySelectorAll('.keypad button[data-digit]').forEach(btn => {
+        const d = Number(btn.getAttribute('data-digit'));
+        btn.classList.remove('correct', 'close', 'wrong');
+        if (digitStatus[d]) {
+          btn.classList.add(digitStatus[d]);
+          btn.disabled = digitStatus[d] === 'wrong';
+        } else {
+          btn.disabled = false;
+        }
+      });
     }
+
+    function disableInput() {
+      document.querySelectorAll('.keypad button').forEach(btn => btn.disabled = true);
+    }
+
+    function shareResults() {
+      const shareLines = [];
+      shareLines.push('Clickle Results:');
+      for (let i = 0; i < guessesContainer.children.length; i++) {
+        const row = guessesContainer.children[i];
+        let line = '';
+        for (const cell of row.children) {
+          if (cell.classList.contains('correct')) line += '🟩';
+          else if (cell.classList.contains('close')) line += '🟨';
+          else line += '⬜';
+        }
+        shareLines.push(line);
+      }
+      shareLines.push(`Secret: ${secret.join('')}`);
+      shareLines.push(`Attempts: ${attempts}/${maxAttempts}`);
+
+      const shareText = shareLines.join('\n');
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert('Results copied to clipboard! Paste them in your email or message.');
+      }, () => {
+        alert('Failed to copy results. Please copy manually:\n' + shareText);
+      });
+    }
+
+    function unlockAudio() {
+      winSound.play().catch(() => {});
+      document.body.removeEventListener('click', unlockAudio);
+    }
+    document.body.addEventListener('click', unlockAudio);
+
+    document.addEventListener('keydown', (event) => {
+      if (gameOver) return;
+      if (event.key >= '0' && event.key <= '9') {
+        addDigit(Number(event.key));
+      } else if (event.key === 'Enter') {
+        submitGuess();
+      } else if (event.key === 'Backspace' || event.key === 'Delete') {
+        clearLastDigit();
+      }
+    });
   </script>
 </body>
 </html>
-
