@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digit Guess Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    .guess-row {
+      display: flex;
+      justify-content: center;
+      margin: 0.3rem 0;
+    }
+    .digit {
+      width: 50px;
+      height: 50px;
+      line-height: 50px;
+      margin: 0 5px;
+      font-size: 24px;
+      border-radius: 5px;
+      background: #ddd;
+    }
+    .correct {
+      background-color: #6aaa64; /* green */
+      color: white;
+    }
+    .close {
+      background-color: #c9b458; /* yellow */
+      color: white;
+    }
+    .wrong {
+      background-color: #787c7e; /* gray */
+      color: white;
+    }
+    .input-row {
+      margin-top: 1rem;
+    }
+    .keypad button {
+      width: 50px;
+      height: 50px;
+      font-size: 18px;
+      margin: 5px;
+    }
+    .message {
+      margin-top: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Digit Guess Game</h1>
+  <div id="guesses"></div>
+
+  <div class="input-row">
+    <div id="current-guess" class="guess-row"></div>
+    <div class="keypad">
+      <div>
+        <button onclick="addDigit(0)">0</button>
+        <button onclick="addDigit(1)">1</button>
+        <button onclick="addDigit(2)">2</button>
+        <button onclick="addDigit(3)">3</button>
+        <button onclick="addDigit(4)">4</button>
+      </div>
+      <div>
+        <button onclick="addDigit(5)">5</button>
+        <button onclick="addDigit(6)">6</button>
+        <button onclick="addDigit(7)">7</button>
+        <button onclick="addDigit(8)">8</button>
+        <button onclick="addDigit(9)">9</button>
+      </div>
+      <button onclick="submitGuess()">Enter</button>
+      <button onclick="clearGuess()">Clear</button>
+    </div>
+  </div>
+
+  <div class="message" id="message"></div>
+
+  <script>
+    const secret = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10));
+    const guessesContainer = document.getElementById('guesses');
+    const currentGuessContainer = document.getElementById('current-guess');
+    const messageBox = document.getElementById('message');
+
+    let currentGuess = [];
+    let attempts = 0;
+    const maxAttempts = 6;
+
+    function addDigit(num) {
+      if (currentGuess.length < 4) {
+        currentGuess.push(num);
+        renderCurrentGuess();
+      }
+    }
+
+    function clearGuess() {
+      currentGuess = [];
+      renderCurrentGuess();
+    }
+
+    function renderCurrentGuess() {
+      currentGuessContainer.innerHTML = '';
+      currentGuess.forEach((digit) => {
+        const div = document.createElement('div');
+        div.className = 'digit';
+        div.textContent = digit;
+        currentGuessContainer.appendChild(div);
+      });
+    }
+
+    function submitGuess() {
+      if (currentGuess.length !== 4) return alert('Enter 4 digits');
+
+      const row = document.createElement('div');
+      row.className = 'guess-row';
+
+      const guess = [...currentGuess];
+      const tempSecret = [...secret];
+      const result = Array(4).fill('wrong');
+
+      // First pass: correct position
+      for (let i = 0; i < 4; i++) {
+        if (guess[i] === tempSecret[i]) {
+          result[i] = 'correct';
+          tempSecret[i] = null;
+          guess[i] = null;
+        }
+      }
+
+      // Second pass: wrong position
+      for (let i = 0; i < 4; i++) {
+        if (guess[i] !== null) {
+          const index = tempSecret.indexOf(guess[i]);
+          if (index !== -1) {
+            result[i] = 'close';
+            tempSecret[index] = null;
+          }
+        }
+      }
+
+      currentGuess.forEach((digit, i) => {
+        const div = document.createElement('div');
+        div.className = 'digit ' + result[i];
+        div.textContent = digit;
+        row.appendChild(div);
+      });
+
+      guessesContainer.appendChild(row);
+      attempts++;
+
+      if (result.every(r => r === 'correct')) {
+        messageBox.textContent = '🎉 You guessed it!';
+        disableInput();
+      } else if (attempts >= maxAttempts) {
+        messageBox.textContent = `💥 Out of tries! Answer was ${secret.join('')}`;
+        disableInput();
+      }
+
+      clearGuess();
+    }
+
+    function disableInput() {
+      document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    }
+  </script>
+</body>
+</html>
+
