@@ -1,361 +1,200 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clickle</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <style>
     body {
-      font-family: sans-serif;
-      background: #115740;
-      color: #ddd;
+      font-family: Arial, sans-serif;
+      background-color: #115740;
+      color: black;
       text-align: center;
-      padding: 2rem;
-      min-height: 100vh;
       margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
+      padding: 0;
     }
     h1 {
-      margin-bottom: 1rem;
-      color: black;
+      margin: 20px 0;
     }
-    .guess-row {
-      display: flex;
+    #game {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      gap: 10px;
       justify-content: center;
-      margin: 0.3rem 0;
+      margin: 20px auto;
     }
     .digit {
-      width: 50px;
-      height: 50px;
-      line-height: 50px;
-      margin: 0 5px;
-      font-size: 24px;
-      border-radius: 5px;
-      background: #2f6f54;
-      color: #ddd;
-      user-select: none;
+      width: 60px;
+      height: 60px;
+      font-size: 2rem;
+      line-height: 60px;
+      text-align: center;
+      border: 2px solid #ccc;
+      background-color: white;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    .flip {
+      animation: flip 0.6s forwards;
+    }
+    @keyframes flip {
+      0% { transform: rotateX(0); }
+      50% { transform: rotateX(90deg); background-color: #ddd; }
+      100% { transform: rotateX(0); }
     }
     .correct {
-      background-color: #6aaa64;
+      background-color: green !important;
       color: white;
     }
-    .close {
-      background-color: #c9b458;
+    .present {
+      background-color: gold !important;
+      color: black;
+    }
+    .absent {
+      background-color: gray !important;
       color: white;
     }
-    .wrong {
-      background-color: #787c7e;
-      color: white;
+    #controls {
+      margin-top: 20px;
     }
-    .input-row {
-      margin-top: 1rem;
-    }
-    .keypad button {
-      width: 50px;
-      height: 50px;
-      font-size: 18px;
-      margin: 5px;
-      border-radius: 5px;
-      border: none;
-      cursor: pointer;
-      background: #2f6f54;
-      color: #ddd;
-      transition: background-color 0.3s ease;
-      user-select: none;
-    }
-    .keypad button.wrong {
-      background-color: #787c7e !important;
-      color: white !important;
-      cursor: default;
-    }
-    .keypad button.correct {
-      background-color: #6aaa64 !important;
-      color: white !important;
-      cursor: default;
-    }
-    .keypad button.close {
-      background-color: #c9b458 !important;
-      color: white !important;
-      cursor: default;
-    }
-    .keypad button:disabled {
-      cursor: default;
-      opacity: 0.7;
-    }
-    .action-buttons {
-      display: flex;
+    #keypad {
+      display: grid;
+      grid-template-columns: repeat(5, 50px);
+      gap: 10px;
       justify-content: center;
-      margin-top: 10px;
+      margin: 20px auto;
     }
-    .action-buttons button {
-      width: 120px;
-      height: 40px;
-      font-size: 16px;
-      margin: 0 10px;
-      border-radius: 5px;
-      border: none;
-      background-color: #357edd;
-      color: white;
+    .key {
+      padding: 10px;
+      font-size: 1.5rem;
+      background-color: white;
+      border: 2px solid #ccc;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
-    .message {
-      margin-top: 1rem;
-      font-weight: bold;
-      font-size: 1.2rem;
+    .key:hover {
+      background-color: #ddd;
     }
-    #share-btn {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
+    button {
+      padding: 10px 20px;
+      margin: 5px;
       font-size: 1rem;
-      border-radius: 5px;
-      border: none;
-      background-color: #357edd;
-      color: white;
       cursor: pointer;
-      display: none;
     }
   </style>
 </head>
 <body>
   <h1>Clickle</h1>
-  <div id="guesses"></div>
+  <div id="game"></div>
 
-  <div class="input-row">
-    <div id="current-guess" class="guess-row"></div>
-    <div class="keypad" aria-label="Digit keypad" role="group">
-      <div>
-        <button data-digit="0" onclick="addDigit(0)">0</button>
-        <button data-digit="1" onclick="addDigit(1)">1</button>
-        <button data-digit="2" onclick="addDigit(2)">2</button>
-        <button data-digit="3" onclick="addDigit(3)">3</button>
-        <button data-digit="4" onclick="addDigit(4)">4</button>
-      </div>
-      <div>
-        <button data-digit="5" onclick="addDigit(5)">5</button>
-        <button data-digit="6" onclick="addDigit(6)">6</button>
-        <button data-digit="7" onclick="addDigit(7)">7</button>
-        <button data-digit="8" onclick="addDigit(8)">8</button>
-        <button data-digit="9" onclick="addDigit(9)">9</button>
-      </div>
-    </div>
-    <div class="action-buttons">
-      <button onclick="submitGuess()">Enter</button>
-      <button onclick="clearGuess()">Clear All</button>
-    </div>
+  <div id="keypad">
+    <!-- Digit buttons will be injected here -->
   </div>
 
-  <div class="message" id="message"></div>
-  <button id="share-btn" onclick="shareResults()">Share Results 📤</button>
-
-  <audio id="win-sound" src="https://cdn.pixabay.com/download/audio/2022/03/02/audio_446900b4ed.mp3?filename=short-jingle-5990.mp3" preload="auto"></audio>
+  <div id="controls">
+    <button onclick="submitGuess()">Enter</button>
+    <button onclick="clearGuess()">Clear All</button>
+  </div>
 
   <script>
+    const gameContainer = document.getElementById('game');
+    const keypad = document.getElementById('keypad');
+    let guess = [];
+    let secret = [];
+
+    async function generateDailyCode() {
+      const dateStr = getCurrentDateEST();
+      const encoder = new TextEncoder();
+      const data = encoder.encode(dateStr);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const digits = [];
+      let i = 0;
+      while (digits.length < 4 && i < hashArray.length) {
+        digits.push((hashArray[i] % 10).toString());
+        i++;
+      }
+      return digits;
+    }
+
     function getCurrentDateEST() {
       const now = new Date();
-      const estOffset = 5 * 60 * 60 * 1000;
-      const estTime = new Date(now.getTime() - estOffset);
-      const year = estTime.getUTCFullYear();
-      const month = String(estTime.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(estTime.getUTCDate()).padStart(2, '0');
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const estOffset = -5 * 60;
+      const est = new Date(utc + estOffset * 60000);
+      const year = est.getFullYear();
+      const month = String(est.getMonth() + 1).padStart(2, '0');
+      const day = String(est.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     }
 
-    function seededRandom(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        hash |= 0;
-      }
-      return Math.abs(hash);
-    }
-
-    function generateDailyCode() {
-      const dateStr = getCurrentDateEST();
-      const seed = seededRandom(dateStr);
-      const code = [];
-      let num = seed;
-      for (let i = 0; i < 4; i++) {
-        code.push(num % 10);
-        num = Math.floor(num / 10);
-      }
-      return code.reverse();
-    }
-
-    const secret = generateDailyCode();
-    const guessesContainer = document.getElementById('guesses');
-    const currentGuessContainer = document.getElementById('current-guess');
-    const messageBox = document.getElementById('message');
-    const shareBtn = document.getElementById('share-btn');
-    const winSound = document.getElementById('win-sound');
-
-    let currentGuess = [];
-    let attempts = 0;
-    const maxAttempts = 6;
-    let gameOver = false;
-
-    const digitStatus = {};
-
-    function addDigit(num) {
-      if (gameOver) return;
-      if (currentGuess.length < 4) {
-        currentGuess.push(num);
-        renderCurrentGuess();
-      }
-    }
-
-    function clearGuess() {
-      if (gameOver) return;
-      currentGuess = [];
-      renderCurrentGuess();
-    }
-
-    function clearLastDigit() {
-      if (gameOver) return;
-      if (currentGuess.length > 0) {
-        currentGuess.pop();
-        renderCurrentGuess();
-      }
-    }
-
-    function renderCurrentGuess() {
-      currentGuessContainer.innerHTML = '';
-      currentGuess.forEach((digit) => {
+    function renderGuess() {
+      gameContainer.innerHTML = '';
+      guess.forEach(digit => {
         const div = document.createElement('div');
         div.className = 'digit';
         div.textContent = digit;
-        currentGuessContainer.appendChild(div);
+        gameContainer.appendChild(div);
       });
     }
 
     function submitGuess() {
-      if (gameOver) return;
-      if (currentGuess.length !== 4) {
-        alert('Enter 4 digits');
-        return;
-      }
+      if (guess.length !== 4) return;
+      const digits = document.querySelectorAll('.digit');
+      guess.forEach((digit, i) => {
+        setTimeout(() => {
+          digits[i].classList.add('flip');
+          setTimeout(() => {
+            if (digit === secret[i]) {
+              digits[i].classList.add('correct');
+            } else if (secret.includes(digit)) {
+              digits[i].classList.add('present');
+            } else {
+              digits[i].classList.add('absent');
+            }
+          }, 300);
+        }, i * 400);
+      });
+    }
 
-      const row = document.createElement('div');
-      row.className = 'guess-row';
+    function clearGuess() {
+      guess = [];
+      renderGuess();
+    }
 
-      const guess = [...currentGuess];
-      const tempSecret = [...secret];
-      const result = Array(4).fill('wrong');
-
-      for (let i = 0; i < 4; i++) {
-        if (guess[i] === tempSecret[i]) {
-          result[i] = 'correct';
-          tempSecret[i] = null;
-          guess[i] = null;
-        }
-      }
-
-      for (let i = 0; i < 4; i++) {
-        if (guess[i] !== null) {
-          const index = tempSecret.indexOf(guess[i]);
-          if (index !== -1) {
-            result[i] = 'close';
-            tempSecret[index] = null;
+    function createKeypad() {
+      for (let i = 0; i <= 9; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'key';
+        btn.textContent = i;
+        btn.onclick = () => {
+          if (guess.length < 4) {
+            guess.push(i.toString());
+            renderGuess();
           }
-        }
+        };
+        keypad.appendChild(btn);
       }
-
-      for (let i = 0; i < 4; i++) {
-        const d = currentGuess[i];
-        if (!digitStatus[d] || digitStatus[d] === 'wrong') {
-          digitStatus[d] = result[i];
-        } else if (digitStatus[d] === 'close' && result[i] === 'correct') {
-          digitStatus[d] = 'correct';
-        }
-      }
-      updateKeypadColors();
-
-      currentGuess.forEach((digit, i) => {
-        const div = document.createElement('div');
-        div.className = 'digit ' + result[i];
-        div.textContent = digit;
-        row.appendChild(div);
-      });
-
-      guessesContainer.appendChild(row);
-      attempts++;
-
-      if (result.every(r => r === 'correct')) {
-        messageBox.textContent = '🎉 You guessed it!';
-        gameOver = true;
-        disableInput();
-        winSound.play();
-        shareBtn.style.display = 'inline-block';
-      } else if (attempts >= maxAttempts) {
-        messageBox.textContent = `💥 Out of tries! Answer was ${secret.join('')}`;
-        gameOver = true;
-        disableInput();
-        shareBtn.style.display = 'inline-block';
-      }
-
-      clearGuess();
     }
 
-    function updateKeypadColors() {
-      document.querySelectorAll('.keypad button[data-digit]').forEach(btn => {
-        const d = Number(btn.getAttribute('data-digit'));
-        btn.classList.remove('correct', 'close', 'wrong');
-        if (digitStatus[d]) {
-          btn.classList.add(digitStatus[d]);
-          btn.disabled = digitStatus[d] === 'wrong';
-        } else {
-          btn.disabled = false;
-        }
-      });
-    }
-
-    function disableInput() {
-      document.querySelectorAll('.keypad button').forEach(btn => btn.disabled = true);
-    }
-
-    function shareResults() {
-      const shareLines = [];
-      shareLines.push('Clickle Results:');
-      for (let i = 0; i < guessesContainer.children.length; i++) {
-        const row = guessesContainer.children[i];
-        let line = '';
-        for (const cell of row.children) {
-          if (cell.classList.contains('correct')) line += '🟩';
-          else if (cell.classList.contains('close')) line += '🟨';
-          else line += '⬜';
-        }
-        shareLines.push(line);
-      }
-      shareLines.push(`Secret: ${secret.join('')}`);
-      shareLines.push(`Attempts: ${attempts}/${maxAttempts}`);
-
-      const shareText = shareLines.join('\n');
-      navigator.clipboard.writeText(shareText).then(() => {
-        alert('Results copied to clipboard! Paste them in your email or message.');
-      }, () => {
-        alert('Failed to copy results. Please copy manually:\n' + shareText);
-      });
-    }
-
-    function unlockAudio() {
-      winSound.play().catch(() => {});
-      document.body.removeEventListener('click', unlockAudio);
-    }
-    document.body.addEventListener('click', unlockAudio);
-
-    document.addEventListener('keydown', (event) => {
-      if (gameOver) return;
-      if (event.key >= '0' && event.key <= '9') {
-        addDigit(Number(event.key));
-      } else if (event.key === 'Enter') {
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9' && guess.length < 4) {
+        guess.push(e.key);
+        renderGuess();
+      } else if (e.key === 'Backspace') {
+        guess.pop();
+        renderGuess();
+      } else if (e.key === 'Enter') {
         submitGuess();
-      } else if (event.key === 'Backspace' || event.key === 'Delete') {
-        clearLastDigit();
       }
     });
+
+    generateDailyCode().then(code => {
+      secret = code;
+      console.log("Today's secret (debug):", secret.join(''));
+    });
+
+    createKeypad();
   </script>
 </body>
 </html>
